@@ -15,11 +15,11 @@ type Route struct {
 
 // TODO add handlers
 var routes []Route = []Route{
-	{Name: "Create record", Path: "/createRecord", Action: "POST", Handler: func(w http.ResponseWriter, r *http.Request) {}},
-	{Name: "Read record", Path: "/readRecord", Action: "GET", Handler: func(w http.ResponseWriter, r *http.Request) {}},
-	{Name: "Update record", Path: "/updateRecord", Action: "PUT", Handler: func(w http.ResponseWriter, r *http.Request) {}},
-	{Name: "Delete record", Path: "/deleteRecord", Action: "DELETE", Handler: func(w http.ResponseWriter, r *http.Request) {}},
-	{Name: "List records", Path: "/listRecords", Action: "POST", Handler: func(w http.ResponseWriter, r *http.Request) {}},
+	{Name: "Create record", Path: "/createRecord", Action: "POST", Handler: CreateRecordHandler},
+	{Name: "Read record", Path: "/readRecord", Action: "GET", Handler: ReadRecordHandler},
+	{Name: "Update record", Path: "/updateRecord", Action: "PUT", Handler: UpdateRecordHandler},
+	{Name: "Delete record", Path: "/deleteRecord", Action: "DELETE", Handler: DeleteRecordHandler},
+	{Name: "List records", Path: "/listRecords", Action: "POST", Handler: ListRecordsHandler},
 }
 
 func NewRouter() *mux.Router {
