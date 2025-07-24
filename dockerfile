@@ -1,4 +1,4 @@
-FROM golang:1.24.4
+FROM golang:1.25rc2-alpine3.22
 
 WORKDIR /effective
 
@@ -10,4 +10,4 @@ RUN go build -o effective .
 
 EXPOSE 8080
 
-CMD ["./effective"]
+ENTRYPOINT ["./effective"]
