@@ -20,6 +20,7 @@ func Init() {
 }
 
 func Connect() (*sql.DB, error) {
+	log.Println("about to connect to db")
 	host := getEnv("POSTGRES_HOST", "localhost")
 	port := getEnv("POSTGRES_PORT", "5432")
 	user := getEnv("POSTGRES_USER", "123")
@@ -27,21 +28,23 @@ func Connect() (*sql.DB, error) {
 	dbname := getEnv("POSTGRES_DB", "subscriptions")
 
 	connStr := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", user, password, host, port, dbname)
+	fmt.Println(connStr)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	newConnStr := "user=postgres password=andrew host=localhost port=5432 dbname=mynewdb sslmode=disable"
-	newDB, err := sql.Open("postgres", newConnStr)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// newConnStr := "user=postgres password=andrew host=localhost port=5432 dbname=mynewdb sslmode=disable"
+	// newDB, err := sql.Open("postgres", newConnStr)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	err = newDB.Ping()
+	err = db.Ping()
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("pinged db successfully")
 
 	return db, nil
 }
