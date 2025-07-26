@@ -21,7 +21,7 @@ func Init() {
 
 func Connect() (*sql.DB, error) {
 	log.Println("about to connect to db")
-	host := getEnv("POSTGRES_HOST", "localhost")
+	host := getEnv("POSTGRES_HOST", "postgres")
 	port := getEnv("POSTGRES_PORT", "5432")
 	user := getEnv("POSTGRES_USER", "123")
 	password := getEnv("POSTGRES_PASSWORD", "123")
@@ -33,12 +33,6 @@ func Connect() (*sql.DB, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// newConnStr := "user=postgres password=andrew host=localhost port=5432 dbname=mynewdb sslmode=disable"
-	// newDB, err := sql.Open("postgres", newConnStr)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 
 	err = db.Ping()
 	if err != nil {
