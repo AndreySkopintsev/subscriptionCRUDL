@@ -1,10 +1,12 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -14,18 +16,20 @@ import (
 
 var PostgresDB *sql.DB
 
+const (
+	maxRetries     = 10
+	retryDelay     = 3 * time.Second
+	connectTimeout = 10 * time.Second
+)
+
 func Init() {
 	dbConnection, err := Connect()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
 	}
-	m, err := migrate.New("file://./migrations", "postgres://postgres_user:postgres_password@postgres:5432/subscriptions?sslmode=disable")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		log.Fatalf("Could not apply migrations: %v", err)
-	}
+
+	RunMigrations()
+
 	PostgresDB = dbConnection
 }
 
@@ -37,11 +41,33 @@ func Connect() (*sql.DB, error) {
 	password := getEnv("POSTGRES_PASSWORD", "123")
 	dbname := getEnv("POSTGRES_DB", "subscriptions")
 
+	var db *sql.DB
+	var err error
+
 	connStr := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", user, password, host, port, dbname)
-	fmt.Println(connStr)
-	db, err := sql.Open("postgres", connStr)
+
+	for i := 0; i < maxRetries; i++ {
+		db, err = sql.Open("postgres", connStr)
+		if err != nil {
+			log.Printf("Failed to open DB connection (attempt %d/%d): %v", i+1, maxRetries, err)
+			time.Sleep(retryDelay)
+			continue
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), connectTimeout)
+		defer cancel()
+
+		err = db.PingContext(ctx)
+		if err == nil {
+			break // Success!
+		}
+
+		log.Printf("Failed to ping DB (attempt %d/%d): %v", i+1, maxRetries, err)
+		time.Sleep(retryDelay)
+	}
+
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("failed to connect after %d attempts: %w", maxRetries, err)
 	}
 
 	err = db.Ping()
@@ -51,6 +77,16 @@ func Connect() (*sql.DB, error) {
 	log.Println("pinged db successfully")
 
 	return db, nil
+}
+
+func RunMigrations() {
+	m, err := migrate.New("file://./migrations", "postgres://postgres_user:postgres_password@postgres:5432/subscriptions?sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("Could not apply migrations: %v", err)
+	}
 }
 
 func getEnv(key, defaultValue string) string {
