@@ -6,6 +6,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 )
 
@@ -15,6 +18,13 @@ func Init() {
 	dbConnection, err := Connect()
 	if err != nil {
 		log.Printf("Failed to connect to database: %v", err)
+	}
+	m, err := migrate.New("file://./migrations", "postgres://postgres_user:postgres_password@postgres:5432/subscriptions?sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("Could not apply migrations: %v", err)
 	}
 	PostgresDB = dbConnection
 }

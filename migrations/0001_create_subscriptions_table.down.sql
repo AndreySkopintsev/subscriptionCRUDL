@@ -1,1 +1,1 @@
-DROP TABLE subscriptions;
+DROP TABLE IF NOT EXISTS subscriptions;
