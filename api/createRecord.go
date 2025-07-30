@@ -23,7 +23,7 @@ func CreateRecordHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	_, err = db.CreateNewRecord(requestStruct.Price, requestStruct.ServiceName)
+	_, err = db.CreateNewRecord(requestStruct.Price, requestStruct.ServiceName, requestStruct.UserId)
 	if err != nil {
 		fmt.Println("couldnt insert into db")
 		w.Write([]byte(err.Error()))

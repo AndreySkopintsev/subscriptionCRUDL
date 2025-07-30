@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid/v5"
 )
 
 const (
@@ -17,8 +17,8 @@ const (
 
 // CRUD db methods
 // Create
-func CreateNewRecord(price int, serviceName string) (common.Subscription, error) {
-	userId := uuid.New()
+func CreateNewRecord(price int, serviceName, userIdString string) (common.Subscription, error) {
+	userId, _ := uuid.FromString(userIdString)
 	// NOTE TO SELF: dont forget 'single quotes' around values (except for int)
 	psqlQuery := fmt.Sprintf(`INSERT INTO %s (user_id, price, service_name, start_date) VALUES ('%s', %s, '%s', '%s')`, SubscriptionTableName, userId, strconv.Itoa(price), serviceName, time.Now().Format("2006-01-02"))
 	fmt.Println("resulting query string is: ", psqlQuery)
@@ -50,7 +50,14 @@ func UpdateRecord(name, description string, id, projectId int, query string) (co
 }
 
 // Delete
-func DeleteRecord(id int) error {
+func DeleteRecord(userIdString, service string) error {
+	userId, _ := uuid.FromString(userIdString)
+	psqlQuery := fmt.Sprintf(`DELETE FROM %s WHERE user_id='%s' AND service_name='%s'`, SubscriptionTableName, userId, service)
+	_, err := PostgresDB.Exec(psqlQuery)
+	if err != nil {
+		fmt.Println("couldnt insert into the subscription table with error ", err.Error())
+		return err
+	}
 	return nil
 }
 
