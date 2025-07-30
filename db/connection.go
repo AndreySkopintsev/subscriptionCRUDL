@@ -23,23 +23,23 @@ const (
 )
 
 func Init() {
-	dbConnection, err := Connect()
-	if err != nil {
-		log.Printf("Failed to connect to database: %v", err)
-	}
-
-	RunMigrations()
-
-	PostgresDB = dbConnection
-}
-
-func Connect() (*sql.DB, error) {
-	log.Println("about to connect to db")
 	host := getEnv("POSTGRES_HOST", "postgres")
 	port := getEnv("POSTGRES_PORT", "5432")
 	user := getEnv("POSTGRES_USER", "123")
 	password := getEnv("POSTGRES_PASSWORD", "123")
 	dbname := getEnv("POSTGRES_DB", "subscriptions")
+	dbConnection, err := Connect(host, user, password, port, dbname)
+	if err != nil {
+		log.Printf("Failed to connect to database: %v", err)
+	}
+
+	RunMigrations(host, user, password, port)
+
+	PostgresDB = dbConnection
+}
+
+func Connect(host, user, password, port, dbname string) (*sql.DB, error) {
+	log.Println("about to connect to db")
 
 	var db *sql.DB
 	var err error
@@ -79,8 +79,8 @@ func Connect() (*sql.DB, error) {
 	return db, nil
 }
 
-func RunMigrations() {
-	m, err := migrate.New("file://./migrations", "postgres://postgres_user:postgres_password@postgres:5432/subscriptions?sslmode=disable")
+func RunMigrations(host, user, password, port string) {
+	m, err := migrate.New("file://./migrations", fmt.Sprintf("%s://%s:%s@postgres:%s/subscriptions?sslmode=disable", host, user, password, port))
 	if err != nil {
 		log.Fatal(err)
 	}
